@@ -1513,6 +1513,35 @@ body {
    Pulled to 10px, which lands optically around 15px. Scoped to this page — the DMR
    header needs its original breathing room. */
 .report-head { padding-bottom: 10px; }
+/* ── DMR PROMO ─────────────────────────────────────────────────────────────
+   Sits above the content card. The canvas centres its child horizontally, so it
+   has to stack rather than sit side by side — hence the column override, scoped
+   to this page. Width matches the card so the two edges line up. */
+.page-canvas { flex-direction:column; align-items:center; justify-content:flex-start; }
+.dmr-promo { width:100%; max-width:1250px; box-sizing:border-box;
+             display:flex; align-items:center; gap:16px; margin-bottom:14px;
+             padding:14px 18px; border-radius:8px; text-decoration:none;
+             background:var(--brilliant-white); border:1px solid rgba(71,118,186,0.45);
+             transition:border-color .15s, box-shadow .15s; }
+.dmr-promo:hover { border-color:var(--brand-blue); box-shadow:0 2px 8px rgba(0,0,0,0.06); text-decoration:none; }
+.dmr-promo-faces { display:flex; flex-shrink:0; }
+.dmr-promo-faces img { width:34px; height:34px; border-radius:50%; object-fit:cover;
+                       border:2px solid var(--brilliant-white); }
+.dmr-promo-faces img + img { margin-left:-11px; }
+.dmr-promo-text { flex:1; min-width:0; font-size:14px; line-height:21px; color:var(--text-primary); }
+.dmr-promo-text strong { font-weight:700; display:block; }
+/* A filled button is right here — unlike the filter chips this genuinely is an action. */
+.dmr-promo-cta { flex-shrink:0; display:inline-flex; align-items:center; gap:6px;
+                 padding:8px 16px; border-radius:4px;
+                 background:var(--brand-blue); color:var(--brilliant-white);
+                 font-size:12px; line-height:17px; font-weight:700;
+                 text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap; }
+.dmr-promo-cta .msym { font-size:16px; }
+@media (max-width: 720px) {
+  .dmr-promo { flex-wrap:wrap; }
+  .dmr-promo-text { flex-basis:100%; order:3; }
+}
+
 .news-tabs { display:flex; gap:0; border-bottom:1px solid var(--steel-grey); margin:0 0 18px; }
 .news-tab { background:none; border:none; border-bottom:3px solid transparent; margin-bottom:-1px;
             padding:10px 2px; margin-right:28px; font-family:inherit; font-size:16px; line-height:22px;
@@ -1563,8 +1592,10 @@ body {
 .news-table td { padding:14px 12px 14px 0; border-bottom:1px solid var(--steel-grey-light); vertical-align:top; }
 .news-table tr:hover td { background:var(--stone-grey-light); }
 
-.nw-co { font-size:15px; line-height:21px; font-weight:700; color:var(--text-primary); text-decoration:none; display:block; }
-.nw-co:hover { color:var(--brand-blue); text-decoration:underline; }
+/* Same rule as the agenda: links are blue across the app. In a 58-row table the
+   blue column of company names is the main scanning aid. */
+.nw-co { font-size:15px; line-height:21px; font-weight:700; color:var(--brand-blue); text-decoration:none; display:block; }
+.nw-co:hover { color:var(--brand-blue-dark); text-decoration:underline; }
 .nw-sub { font-size:13px; line-height:19px; color:var(--text-secondary); white-space:nowrap; }
 /* The announcement title opens the full RNS, so it is a control, not a label.
    A button rather than a link because it opens a sheet in place. */
@@ -1731,7 +1762,6 @@ body.sheet-open { overflow:hidden; }
         <span class="local-nav-group-label">Daily Market Report</span>
         <a class="local-nav-link" href="index.html">Today's Report</a>
         <a class="local-nav-link" href="previous-reports.html">All Previous Reports</a>
-        <a class="local-nav-link active" href="news.html">Today&rsquo;s News</a>
       </div>
       <div class="local-nav-divider"></div>
       <div class="local-nav-group">
@@ -1757,6 +1787,21 @@ body.sheet-open { overflow:hidden; }
   <main class="app-main">
 
     <div class="page-canvas">
+      <!-- Above the card, so it frames the page rather than interrupting it. Sells the
+           curation — the value a raw feed cannot give — with named analysts carrying the
+           E-E-A-T weight. White on the grey canvas: a blue tint would go muddy here. -->
+      <a class="dmr-promo" href="index.html">
+        <span class="dmr-promo-faces">
+          <img src="img/roland-head.jpg" alt="">
+          <img src="img/graham-neary.jpg" alt="">
+          <img src="img/mark-simpson.png" alt="">
+        </span>
+        <span class="dmr-promo-text">
+          <strong>Our analysts have reviewed every announcement today.</strong>
+          See the 12 that caught their eye, with in-depth analysis on 8.
+        </span>
+        <span class="dmr-promo-cta">Read today&rsquo;s report <span class="msym" aria-hidden="true">arrow_forward</span></span>
+      </a>
       <div class="content-card">
         <div class="article-wrap">
 
@@ -1782,7 +1827,7 @@ body.sheet-open { overflow:hidden; }
       <!-- TABS -->
       <div class="news-tabs" role="tablist">
         <button class="news-tab" id="tab-folio" role="tab" onclick="showTab('folio')">
-          Your portfolio news <span class="news-tab-count" id="tabc-folio"></span>
+          My portfolio news <span class="news-tab-count" id="tabc-folio"></span>
         </button>
         <button class="news-tab is-active" id="tab-market" role="tab" onclick="showTab('market')">
           All news <span class="news-tab-count" id="tabc-market"></span>

@@ -1165,8 +1165,7 @@ body {
    whether or not the reader owns the stock. */
 .ag-own { position:relative; display:inline-flex; align-items:center; margin-left:7px;
           vertical-align:-2px; cursor:help; }
-.ag-own svg { width:15px; height:15px; stroke:var(--brand-blue); fill:none;
-              stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.ag-own .msym { font-size:17px; color:var(--brand-blue); }
 .ag-own:focus-visible { outline:2px solid var(--brand-blue); outline-offset:2px; border-radius:2px; }
 /* One tooltip for anything with data-tip. Case, tracking and style are reset so
    it inherits nothing from the heading or stamp it hangs off. */
@@ -1182,8 +1181,11 @@ body {
   border:5px solid transparent; border-top-color:var(--charcoal-black);
 }
 
-.ag-co { color:inherit; text-decoration:none; border-bottom:1px solid var(--steel-grey-dark); }
-.ag-co:hover { color:var(--brand-blue); border-bottom-color:var(--brand-blue); text-decoration:none; }
+/* Blue, matching every other link in the app — and it gives the agenda twelve
+   consistent anchors to scan down. No standing underline: at 18px bold it was
+   heavy, and colour already carries the affordance. Underline on hover only. */
+.ag-co { color:var(--brand-blue); text-decoration:none; }
+.ag-co:hover { color:var(--brand-blue-dark); text-decoration:underline; }
 .ag-sep { color:var(--text-secondary); font-weight:400; margin:0 7px; }
 
 /* One item treatment: everything on the agenda cleared the same bar. */
@@ -1578,7 +1580,6 @@ i.mn-miss   { background:var(--sucker-red-dark); }
         <span class="local-nav-group-label">Daily Market Report</span>
         <a class="local-nav-link active" href="#">Today's Report</a>
         <a class="local-nav-link" href="previous-reports.html">All Previous Reports</a>
-        <a class="local-nav-link" href="news.html">Today&rsquo;s News</a>
       </div>
       <div class="local-nav-divider"></div>
       <div class="local-nav-group">
@@ -1698,7 +1699,7 @@ i.mn-miss   { background:var(--sucker-red-dark); }
         <div class="morenews-grid">
           <a class="morenews-card" href="news.html?tab=folio">
             <div class="morenews-card-head">
-              <span class="morenews-card-title">Your portfolio news</span>
+              <span class="morenews-card-title">My portfolio news</span>
               <span class="msym morenews-arrow" aria-hidden="true">arrow_forward</span>
             </div>
             <div class="morenews-figure">11 <span class="morenews-unit">announcements</span></div>
@@ -2697,23 +2698,17 @@ function renderAgenda() {
   // so they point at where the signal came from rather than just decorating.
   // Ownership marks the company rather than taking a row of its own: every
   // headline starts at the same left edge, so a marker there scans down the
-  // column without adding a line. Filled for a holding, ring for a watchlist —
-  // the two stay distinct because merging them would mark nearly everything for
-  // someone running twenty mostly-watchlist folios. Tooltip names the folio and
-  // is reachable by keyboard, but the page has to work without it.
-  const ownIcon = {
-    // Folder for a folio holding; the same eye used for "viewing" in the header
-    // for a watchlist. Two shapes rather than filled-versus-outline, which asks
-    // the reader to learn a convention.
-    held:  '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h3.6a2 2 0 011.4.6L11.4 7H19a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
-    watch: '<svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>'
-  };
+  // column without adding a line. One icon for every folio: there is no hard
+  // watchlist concept in the product — a folio without transactions is simply
+  // treated as one — so a second shape would be inventing a distinction the app
+  // does not make. Tooltip names the folio and is reachable by keyboard, but the
+  // page has to work without it.
   const ownMark = (kind, names) => {
     const list = (names || []).join(', ');
-    const tip = kind === 'held'
-      ? (list ? 'Held in ' + list : 'Held in your folios')
-      : (list ? 'On your ' + list + ' watchlist' : 'On your watchlist');
-    return `<span class="ag-own" tabindex="0" data-tip="${tip}" aria-label="${tip}">${ownIcon[kind]}</span>`;
+    // "Held in" would be wrong for a folio with no transactions against it, so
+    // the wording just names the folio and stays true either way.
+    const tip = list ? 'In ' + list : 'In your folios';
+    return `<span class="ag-own" tabindex="0" data-tip="${tip}" aria-label="${tip}"><span class="msym" aria-hidden="true">folder</span></span>`;
   };
 
   // Everything on the agenda cleared the same bar, so everything gets the same
