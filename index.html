@@ -308,7 +308,7 @@ body {
 .report-meta, .report-byline,
 .report-head .article-title-row,
 .article-h2, .article-body, .article-list,
-.agenda-header-main, .agenda-sub,
+.agenda-sub,
 .morenews-h2,
 .authors-h2 { max-width: 744px; }
 
@@ -1152,7 +1152,6 @@ body {
 /* ── AGENDA (v2) — editorial hierarchy, no card chrome ─────────────────── */
 .agenda-section { margin-bottom: 32px; }
 .agenda-header { margin-bottom:14px; padding-bottom:13px; border-bottom:2px solid var(--charcoal-black); }
-.agenda-header-main { min-width:0; }
 .agenda-h2 { font-size:24px; line-height:31px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
 .agenda-count { font-weight:400; color:var(--text-primary); }
 .agenda-sub { font-size:14px; line-height:21px; color:var(--text-secondary); }
@@ -1181,11 +1180,8 @@ body {
   border:5px solid transparent; border-top-color:var(--charcoal-black);
 }
 
-/* Blue, matching every other link in the app — and it gives the agenda twelve
-   consistent anchors to scan down. No standing underline: at 18px bold it was
-   heavy, and colour already carries the affordance. Underline on hover only. */
-.ag-co { color:var(--brand-blue); text-decoration:none; }
-.ag-co:hover { color:var(--brand-blue-dark); text-decoration:underline; }
+/* .ag-co is retired: the company name is now part of the headline link, and the
+   company destination lives in the ticker chip in the metadata row. */
 .ag-sep { color:var(--text-secondary); font-weight:400; margin:0 7px; }
 
 /* One item treatment: everything on the agenda cleared the same bar. */
@@ -1198,6 +1194,25 @@ body {
 .ag-row { display:flex; align-items:flex-start; gap:24px; }
 .ag-col { flex:1; min-width:0; }
 .ag-head { font-size:18px; line-height:25px; font-weight:700; color:var(--text-primary); margin-bottom:9px; }
+/* Ticker chip: the company link as its own object. Bordered, because a border on a
+   chip reads as clickable — which here is exactly right. Hovering it previews the
+   StockReport, so the destination announces itself before the click. */
+.ag-ticker { display:inline-flex; align-items:center; position:relative;
+             padding:1px 9px; border:1px solid var(--steel-grey); border-radius:16px;
+             font-size:12px; line-height:18px; font-weight:700; letter-spacing:0.02em;
+             color:var(--brand-blue); text-decoration:none; white-space:nowrap; }
+.ag-ticker:hover { border-color:var(--brand-blue); background:rgba(71,118,186,0.08); text-decoration:none; }
+.ag-ticker:focus-visible { outline:2px solid var(--brand-blue); outline-offset:2px; }
+
+/* The headline opens the full announcement, so it is a control — a button, because
+   it opens a sheet in place rather than navigating. Deliberately NOT blue: the house
+   rule is that links are blue, but an entirely blue 18px heading would erase the
+   company/story distinction this change exists to create. Editorial headlines being
+   dark and colouring on hover is the standard newspaper exception. */
+.ag-head-link { display:inline; padding:0; margin:0; border:none; background:none; text-align:left;
+                font:inherit; color:inherit; cursor:pointer; }
+.ag-head-link:hover { color:var(--brand-blue); }
+.ag-head-link:focus-visible { outline:2px solid var(--brand-blue); outline-offset:2px; border-radius:2px; }
 
 /* Fixed-width signal column: one type size throughout, so every row is the
    same height and the numbers line up down the page. */
@@ -1229,6 +1244,17 @@ body {
    base greens and reds so white text at 10px still passes contrast. */
 .ag-earn.is-beat.is-big { background:var(--super-green-dark); color:var(--brilliant-white); }
 .ag-earn.is-miss.is-big { background:var(--sucker-red-dark);  color:var(--brilliant-white); }
+
+/* Sub and status share a row: the selection on the left at its 744px measure, the
+   status hard right against the rule that spans the full column. */
+.agenda-subrow { display:flex; align-items:baseline; justify-content:space-between; gap:24px; }
+.agenda-live { display:flex; align-items:center; gap:7px; flex-shrink:0; margin:0;
+               font-size:13px; line-height:21px; font-weight:700; color:var(--sucker-red-dark); }
+/* .live-dot is white for the filled LIVE badge; on a light background it needs the colour. */
+.agenda-live .live-dot { width:7px; height:7px; background:var(--sucker-red); }
+/* StockRank explains itself on hover and on keyboard focus, like the ratings do. */
+.ag-sr { position:relative; cursor:help; }
+.ag-sr:focus-visible { outline:2px solid var(--brand-blue); outline-offset:2px; border-radius:2px; }
 
 .ag-body { margin-bottom:12px; }
 .ag-body p { font-size:15px; line-height:24px; color:var(--text-primary); }
@@ -1685,11 +1711,16 @@ i.mn-miss   { background:var(--sucker-red-dark); }
       <!-- TODAY'S AGENDA -->
       <div class="agenda-section" id="agenda-section">
         <div class="agenda-header">
-          <div class="agenda-header-main">
-            <h2 class="agenda-h2">Today&rsquo;s agenda <span class="agenda-count" id="agenda-count"></span></h2>
+          <h2 class="agenda-h2">The stories that matter <span class="agenda-count" id="agenda-count"></span></h2>
+          <div class="agenda-subrow">
             <p class="agenda-sub" id="agenda-sub"></p>
+            <!-- Says only what the byline cannot: notes are still arriving. Timeliness is
+                 red with a live dot throughout, so it borrows that rather than repeating
+                 the three faces already credited above the headline. -->
+            <p class="agenda-live" id="agenda-live" hidden><span class="live-dot"></span>Analyst notes added through the day</p>
           </div>
         </div>
+
         <div id="agenda-list"></div>
       </div>
 
@@ -2733,7 +2764,18 @@ function renderAgenda() {
     const newItem = meta.added && meta.added <= clock && meta.added > lastVisit;
     const verdict = earnVerdict(r.earn, earnMag[r.tick]);
 
-    const company = `<a class="ag-co" href="${srUrls[r.tick] || '#'}" target="_blank" rel="noopener" onmouseenter="scheduleShowPopover('${r.tick}', this)" onmouseleave="scheduleHidePopover()">${r.co}</a>`;
+    // The company link is a separate object in the metadata row rather than a colour
+    // inside the heading. Two link treatments in one h3 asked the reader to decode
+    // which half went where, and the dark half had no affordance at all on touch.
+    // Now: the whole headline is the story, the ticker chip is the company. This is
+    // the convention on Yahoo Finance, MarketWatch and Reuters news lists.
+    // The name leads, separated by a dash. Integrating it into the prose read better
+    // but scanned worse: the eye needs a token to land on at a fixed left edge, and a
+    // name inside a sentence has no boundary. Tried a ticker kicker above the headline
+    // instead — the tokens were uniform but too abstract to recognise at a glance.
+    const headline = `<button class="ag-head-link" onclick="openRNS('${r.tick}')">${r.co}<span class="ag-sep">&mdash;</span>${meta.headline || r.rns}</button>`;
+    const ticker = `<a class="ag-ticker" href="${srUrls[r.tick] || '#'}" data-tip="StockReport for ${r.co}"
+        onmouseenter="scheduleShowPopover('${r.tick}', this)" onmouseleave="scheduleHidePopover()">${r.tick}</a>`;
 
     // A byline appears when there is an analyst view to attribute, and not
     // otherwise. Absence needs no label: the page-level count already says how
@@ -2771,9 +2813,10 @@ function renderAgenda() {
     }
 
     const metaLine = `<div class="ag-meta">
-      <span>Market cap: <span class="ag-meta-val">${r.cap}</span></span>
-      <span class="ag-meta-sep">&middot;</span><span>StockRank <span class="sr ${srClass(r.sr)}">${r.sr}</span></span>
-      <span class="ag-meta-sep">&middot;</span><a class="ag-link" href="#" onclick="openRNS('${r.tick}');return false;">${meta.rnsType || 'View RNS'}</a>
+      ${ticker}${own}
+      <span class="ag-meta-sep">&middot;</span><span>Market cap: <span class="ag-meta-val">${r.cap}</span></span>
+      <span class="ag-meta-sep">&middot;</span><span class="ag-sr" tabindex="0" data-tip="A blend of Quality, Value and Momentum. 80+ is strong.">StockRank <span class="sr ${srClass(r.sr)}">${r.sr}</span></span>
+      <span class="ag-meta-sep">&middot;</span><span>${meta.rnsType || 'Announcement'}</span>
       <span class="ag-meta-sep">&middot;</span><a class="ag-link jump-discuss" href="#discussion-section" data-tick="${r.tick}" onclick="jumpToDiscussion('${r.tick}');return false;"><span class="jump-discuss-count">0 comments</span></a>
     </div>`;
 
@@ -2783,7 +2826,7 @@ function renderAgenda() {
       ${(newNote || newItem) ? `<span class="ag-item-new" title="${newWhy} &mdash; since your last visit at ${lastVisit}">New</span>` : ''}
       <div class="ag-row">
         <div class="ag-col">
-          <h3 class="ag-head">${company}${own}<span class="ag-sep">&mdash;</span>${meta.headline || r.rns}</h3>
+          <h3 class="ag-head">${headline}</h3>
           <div class="ag-body"><p>${r.summary}</p></div>
           ${metaLine}
           ${note}
@@ -2802,6 +2845,8 @@ function renderAgenda() {
   const done = items.filter(r => { const m = agendaMeta[r.tick] || {}; return r.covered && m.time && m.time <= stateClock[currentState]; }).length;
   // Count sits in the heading; the sub states the selection rule rather than
   // claiming an analyst weighed all 47 by hand.
+  const live = document.getElementById('agenda-live');
+  if (live) live.hidden = !isLive(currentState);
   const countEl = document.getElementById('agenda-count');
   if (countEl) countEl.textContent = `(${items.length})`;
   // No denominator: "of 8" is a number that appears nowhere else on the page, and
@@ -2813,7 +2858,7 @@ function renderAgenda() {
   document.getElementById('agenda-sub').innerHTML =
     `We&rsquo;ve found the beats, misses, big movers and the stocks members hold. `
     + (done === 0
-        ? `Analyst notes follow.`
+        ? ``
         : done < covered
           ? `<strong>${done}</strong> notes in, ${covered - done} to come.`
           : `All <strong>${covered}</strong> in; ${summaryOnly} summaries only.`);
